@@ -1,0 +1,70 @@
+plugins {
+	id 'fabric-loom' version "${loom_version}"
+	id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+	maven { url = "https://maven.blamejared.com/" }
+	maven { url = "https://maven.ladysnake.org/releases" }
+	maven { url = "https://maven.shedaniel.me/" }
+	maven { url = "https://maven.terraformersmc.com/releases" }
+	maven { url = "https://jitpack.io" }
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:$minecraft_version"
+	mappings "net.fabricmc:yarn:$yarn_mappings"
+	modImplementation "net.fabricmc:fabric-loader:$loader_version"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:$fabric_api_version"
+
+	// 原版 Hexcessible —— Mixin 目标宿主，从官方 Release 获取
+	modImplementation files("${rootProject.rootDir}/libs/hexcessible-${hexcessible_version}.jar")
+
+	// Hex Casting API（编译 Entry / HexAngle 等类型需要）
+	modImplementation("at.petra-k.hexcasting:hexcasting-fabric-$minecraft_version:$hexcasting_version") {
+		exclude module: "phosphor"
+		exclude module: "lithium"
+		exclude module: "emi"
+	}
+
+	// Hex Casting 运行时依赖（仅开发环境 runClient 使用，不打包）
+	modLocalRuntime "dev.onyxstudios.cardinal-components-api:cardinal-components-api:$cardinal_components_version"
+	modLocalRuntime "at.petra-k.paucal:paucal-fabric-$minecraft_version:$paucal_version"
+	modLocalRuntime files("${rootProject.rootDir}/libs/serialization-hooks-0.4.99999.jar")
+
+	// PinIn —— 中文拼音匹配引擎（Towdium, MIT license），随插件一并打包
+	implementation "com.github.Towdium:PinIn:1.6.0"
+	include "com.github.Towdium:PinIn:1.6.0"
+}
+
+processResources {
+	inputs.property "version", version
+	filesMatching("fabric.mod.json") {
+		expand "version": version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 17
+}
+
+java {
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
+}

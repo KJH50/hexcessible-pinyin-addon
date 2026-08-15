@@ -1,0 +1,29 @@
+# gradle
+.gradle/
+build/
+out/
+classes/
+
+# eclipse
+*.launch
+.classpath
+.project
+.settings/
+bin/
+
+# idea
+*.iml
+*.ipr
+*.iws
+.idea/
+.idea_modules/
+
+# vscode
+.vscode/
+bin/
+
+# local libraries
+libs/
+
+# ide generated
+.factorypath
