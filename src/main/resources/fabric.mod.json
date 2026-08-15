@@ -6,7 +6,7 @@
 	"description": "为 Hexcessible 增加中文拼音搜索：支持用拼音或中文模糊搜索法术图案，并自动根据游戏语言调整搜索权重。",
 	"authors": ["KJH50"],
 	"contact": {
-		"sources": "https://github.com/KJH50/hexcessible-PinIn"
+		"sources": "https://github.com/KJH50/hexcessible-pinyin-addon"
 	},
 	"license": "MIT",
 	"environment": "client",
