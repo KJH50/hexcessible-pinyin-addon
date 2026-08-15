@@ -81,4 +81,6 @@ src/main/java/dev/kjh50/hexcessible/pinyin/
 
 ## License
 
-MIT
+MIT License，详见 [LICENSE](LICENSE)。
+
+随包分发的 PinIn（Towdium）等第三方组件版权声明见 [NOTICE.md](NOTICE.md)。
