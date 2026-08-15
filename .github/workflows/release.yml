@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # 创建 GitHub Release
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Cache Loom
+        uses: actions/cache@v4
+        with:
+          path: .gradle/loom-cache
+          key: loom-${{ runner.os }}-${{ hashFiles('gradle.properties', 'build.gradle') }}
+          restore-keys: |
+            loom-${{ runner.os }}-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # libs/ 被 .gitignore 排除，需从原版 Releases 拉取编译依赖的 hexcessible jar
+      - name: Fetch hexcessible 0.3.1 (libs/)
+        run: |
+          mkdir -p libs
+          curl -fL -o libs/hexcessible-0.3.1.jar \
+            "https://github.com/tizu69/hexcessible/releases/download/v0.3.1/hexcessible-0.3.1.jar"
+          echo "7256d90456bd5021e200881ef74ebbe9340f1ca0332c900ba1f27102d04d6edf  libs/hexcessible-0.3.1.jar" | sha256sum -c -
+
+      - name: Build
+        run: ./gradlew build --no-daemon
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/libs/*.jar
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-alpha') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') }}
