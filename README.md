@@ -10,9 +10,13 @@
 
 - **拼音搜索**：在 Hexcessible 的法术搜索框里输入拼音（如 `huo`、`huoyan`）即可匹配中文法术名（如「火焰」）
 - **中文搜索**：直接输入中文片段也能模糊命中（CJK 名称 contains 回退）
+- **大小写不敏感**：拼音/英文查询统一按小写匹配（与原版英文搜索行为一致）
+- **输入即搜**：施法界面空闲时直接输入字母/数字/汉字即可弹出法术搜索框——不必点击，
+  也不依赖 Ctrl+Space（Windows 微软拼音默认把 Ctrl+Space 注册为「输入法开/关」系统热键，
+  会在系统层拦截，游戏收不到该按键；本插件的「输入即搜」完全绕开这个问题）
 - **语言感知权重**：自动检测游戏语言——
-  - 中文环境：PinIn 拼音匹配优先（+5000），英文名/ID 辅助
-  - 其他语言：英文名/ID 匹配优先（保持原版手感），拼音匹配辅助（+2000）
+  - 中文环境：PinIn 拼音匹配优先（+5000），英文名/ID 辅助（name ×3、id ×1，与原版权重一致）
+  - 其他语言：英文名/ID 匹配优先（name ×5、id ×3，高于原版权重以强化英文匹配），拼音匹配辅助（+2000）
 
 ## 原理
 
@@ -22,8 +26,12 @@
 - `@Inject(method = "get(Ljava/lang/String;)Ljava/util/List;", at = @At("HEAD"), cancellable = true)`
 - `@Shadow` 复用原版私有字段 `entries` 与 `fuzzySearchCache`
   - 搜索缓存继续由原版 `invalidateCaches()` 统一管理，无需额外清理逻辑
-- 评分完全复刻原版逻辑（`z 索引 * 10000` + `Utils.fluffySearch` × 权重），
-  再叠加 contains 回退与 PinIn 拼音加分
+- 评分沿用原版结构（`z 索引 * 10000` + `Utils.fluffySearch` × 权重），并叠加两个增强：
+  - **contains 回退**：顺序模糊匹配失败但名称整体包含查询串时给基础分 10（中英文分支均生效），
+    让仅含查询子串的 CJK 名称也能进入结果；代价是可能带入少量「仅包含」的噪声条目
+  - **PinIn 拼音加分**：查询统一转为小写后做拼音匹配（中文环境 +5000，其他语言 +2000）
+- 权重说明：中文分支 name ×3 / id ×1（与原版一致）；其他语言分支 name ×5 / id ×3
+  （高于原版以强化英文匹配，因此该语言下结果排序与原版略有差异）
 - 空查询、缓存命中仍走原版路径，行为完全兼容
 
 ## 目录结构
@@ -32,7 +40,8 @@
 src/main/java/dev/kjh50/hexcessible/pinyin/
 ├── PinyinAddonClient.java        # Client 入口（打印加载日志）
 ├── mixin/
-│   └── PatternEntriesSearchMixin.java  # 注入 PatternEntries#get(String)
+│   ├── PatternEntriesSearchMixin.java  # 注入 PatternEntries#get(String)
+│   └── IdlingSearchOpenMixin.java      # 空闲状态输入字符即打开搜索框（模拟 Ctrl+Space）
 └── search/
     └── PinyinSearcher.java       # PinIn 引擎 + 语言检测 + 评分逻辑
 ```
@@ -54,6 +63,13 @@ src/main/java/dev/kjh50/hexcessible/pinyin/
 ## 使用
 
 把构建出的 jar 放进 `mods/` 即可（与下列模组一同使用）：
+
+> **关于 Ctrl+Space**：原版 hexcessible 用「施法界面内按 Ctrl+Space」打开搜索框。
+> 但微软拼音等中文输入法默认把 Ctrl+Space 用作「输入法开/关」系统热键（OS 层直接拦截，
+> 游戏收不到该按键），所以原版方式在中文系统上常常无效。本插件的「输入即搜」
+> （空闲状态直接输入字符即打开搜索框）可完全替代；若仍想恢复 Ctrl+Space 原版行为，
+> 可在 Windows「设置 → 时间和语言 → 语言和区域 → 中文 → 微软拼音 → 键盘选项 → 按键」中
+> 更改或禁用「输入法开/关」热键，让游戏重新收到 Ctrl+Space。
 
 | 模组 | 版本 |
 |---|---|

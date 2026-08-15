@@ -33,9 +33,14 @@ public abstract class PatternEntriesSearchMixin {
 	@Shadow(remap = false)
 	private List<Entry> entries;
 
+	// 注意：@Shadow 字段绝不能带初始化器（也不要写 final 关键字 + = null）——
+	// Mixin 会把 Mixin 构造函数里的字段赋值指令注入目标构造函数末尾，
+	// 用 null 覆盖原版在构造函数中赋的 new HashMap<>()，导致启动即崩溃
+	// （PatternEntries.fuzzySearchCache 为 null，invalidateCaches 抛 NPE）。
+	// @Final 只是注解，用于告知 Mixin 目标字段是 final，源码层面不加 final 修饰符。
 	@Shadow(remap = false)
 	@Final
-	private Map<String, List<Entry>> fuzzySearchCache = null;
+	private Map<String, List<Entry>> fuzzySearchCache;
 
 	@Inject(method = "get(Ljava/lang/String;)Ljava/util/List;",
 			at = @At("HEAD"), cancellable = true, remap = false)

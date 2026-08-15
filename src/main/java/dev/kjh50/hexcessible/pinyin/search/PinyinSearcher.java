@@ -2,6 +2,7 @@ package dev.kjh50.hexcessible.pinyin.search;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import dev.tizu.hexcessible.Utils;
@@ -64,6 +65,9 @@ public final class PinyinSearcher {
 	public static List<Entry> search(String query, List<Entry> entries,
 			List<Entry> smartSigs, Map<String, List<Entry>> cache) {
 		boolean chinese = isChineseLanguage();
+		// PinIn 的匹配区分大小写（原版 fluffySearch 内部会 toLowerCase），
+		// 查询先统一转小写，保持大小写不敏感的行为一致
+		String pinInQuery = query.toLowerCase(Locale.ROOT);
 
 		var pool = new ArrayList<Entry>(entries.size() + smartSigs.size());
 		pool.addAll(entries);
@@ -80,13 +84,13 @@ public final class PinyinSearcher {
 						// 中文环境：PinIn 拼音匹配优先，英文名/ID 辅助
 						score += nameMatch * 3;
 						score += idMatch * 1;
-						if (!e.name().isEmpty() && getPinIn().contains(e.name(), query))
+						if (!e.name().isEmpty() && getPinIn().contains(e.name(), pinInQuery))
 							score += 5000;
 					} else {
 						// 非中文环境：英文名/ID 匹配优先，PinIn 辅助
 						score += nameMatch * 5;
 						score += idMatch * 3;
-						if (!e.name().isEmpty() && getPinIn().contains(e.name(), query))
+						if (!e.name().isEmpty() && getPinIn().contains(e.name(), pinInQuery))
 							score += 2000;
 					}
 					return Map.entry(e, score);

@@ -3,7 +3,8 @@
 	"package": "dev.kjh50.hexcessible.pinyin.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"client": [
-		"PatternEntriesSearchMixin"
+		"PatternEntriesSearchMixin",
+		"IdlingSearchOpenMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
